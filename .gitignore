@@ -233,3 +233,6 @@ runtime/
 *.eml
 *.mbox
 *.maildir/
+
+# Windows DPAPI credential exports are local secrets
+*.clixml

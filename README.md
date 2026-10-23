@@ -1,4 +1,4 @@
-# PrivateMailMCP
+﻿# PrivateMailMCP
 
 A small read-only IMAP server using Python's standard library and the official MCP SDK. The single MCP transport is Streamable HTTP on `http://127.0.0.1:8000/mcp`. One process serves one locally configured mailbox. `CONSTRAINTS.md` is authoritative.
 
@@ -80,6 +80,28 @@ Output contains fixed diagnostics and counts only: no addresses, subjects, bodie
 
 ## Deployment boundary
 
-The endpoint binds only `127.0.0.1`; SDK Host/Origin protection stays enabled. It has no public authentication mechanism and must not be exposed as an unauthenticated public endpoint. Existing McpProbe/OpenAI tunnel setup, credentials and registration are separate deployment concerns. Later integration can point the separately configured tunnel at this localhost `/mcp` endpoint, after verifying its access controls and endpoint compatibility. No tunnel settings or running tunnel processes are changed by this project.
+The endpoint binds only `127.0.0.1`; SDK Host/Origin protection stays enabled. It has no public authentication mechanism and must not be exposed as an unauthenticated public endpoint. The OpenAI Secure MCP Tunnel remains a separate deployment component; OpenAI libraries and tunnel clients are not dependencies of the server. Tunnel access restrictions must be verified before private mail is routed through it.
 
-OpenAI libraries and tunnel clients are not dependencies of the server. Multiple accounts, SMTP, attachments/downloads, mutations, OAuth, alternate transports, caching/databases, advanced rendering, indexing, scheduling and service management are deferred.
+The owner's local deployment uses the existing workspace manager, `D:\SC\BQ\bq.ps1`, with services `privatemail` and `privatemail-tunnel`. Its launchers, existing tunnel installation and unchanged production profile reside outside this repository under `D:\SC\BQ\.bq\privatemail`. The profile keeps the working tunnel identity and localhost `/mcp` target, so the existing ChatGPT plugin registration does not change. McpProbe remains a separate manual experiment; do not reuse the private mail tunnel profile for it.
+
+From `D:\SC\BQ`, use:
+
+```powershell
+.\bq.ps1 start privatemail-tunnel
+.\bq.ps1 status privatemail -Json
+.\bq.ps1 status privatemail-tunnel -Json
+.\bq.ps1 restart privatemail
+.\bq.ps1 stop privatemail
+```
+
+Starting the tunnel first ensures the server has answered an MCP initialize readiness request. Stopping the server stops its dependent tunnel first; restarting the server restores its previously running tunnel after readiness. Stopping only `privatemail-tunnel` leaves the local server running. Consoles default hidden and do not require an interactive PowerShell window to stay open. Readiness does not call IMAP or fetch mail. No Windows login/startup automation is configured.
+
+The server continues to use its ignored, owner-restricted local TOML. The tunnel uses only a Windows CurrentUser DPAPI-protected `credentials.clixml`, outside Git, created once through the workspace's `configure-credential.ps1` masked local prompt with the original restricted Tunnels Read + Use key. Never put the key in chat or command arguments. Missing, unreadable or undecryptable credentials fail without prompting or replacement; use the same Windows user that created the protected file. Check credentials without starting the tunnel:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\.bq\privatemail\start-tunnel.ps1 -CheckCredentialOnly
+```
+
+Tunnel raw HTTP logging, tracing and payload capture are explicitly disabled. Vendor stdout/stderr are suppressed to protect mail data; launcher failures use fixed sanitized diagnostics. The loopback health endpoint and bq status provide readiness without email data. No inbound firewall rule is required.
+
+Multiple accounts, SMTP, attachments/downloads, mutations, OAuth, alternate transports, caching/databases, advanced rendering, indexing and scheduling inside the server remain deferred. Service management stays in the owner's workspace deployment and is not part of the IMAP/MCP implementation.
