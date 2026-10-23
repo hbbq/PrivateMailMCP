@@ -1,0 +1,14 @@
+# Sanitized template. Copy to config.local.toml (ignored); restrict its file ACL.
+# Set host to the IMAP hostname supplied by your Loopia account.
+host = "imap.example.invalid"
+port = 993
+username = "mailbox@example.invalid"
+# Prefer PRIVATE_MAIL_PASSWORD in the local process environment.
+# password = "replace-locally"
+listen_port = 8000
+timeout = 20
+max_results = 50
+max_body_chars = 32000
+max_message_bytes = 1048576
+max_header_bytes = 32768
+max_folders = 200

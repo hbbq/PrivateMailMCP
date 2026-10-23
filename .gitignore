@@ -218,3 +218,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# PrivateMailMCP local configuration, secrets and mail/runtime data
+config.local.toml
+config.*.local.toml
+.env.*
+!.env.example
+secrets/
+*.secret
+*.pem
+*.key
+logs/
+runtime/
+*.eml
+*.mbox
+*.maildir/
